@@ -1,0 +1,195 @@
+### Set and Get Working Direcory   ####
+setwd("C:/Users/DineshSiva/Desktop/Analytics/Project/Project")
+getwd()
+
+
+install.packages("readxl")
+library(readxl)
+
+# mydata<-read_excel("GlobalIndex.xlsx",na = "#N/A")
+MktData<-read_excel("Capstone_Data2_std.xlsx",na = "#N/A",sheet='NIFTY' )
+View(MktData)
+colnames(MktData)
+attach(MktData)
+sum(is.na(MktData))
+colSums(is.na(MktData))
+colSums(is.na(MktData))
+My_data=MktData
+
+#write.csv(MktData, file = "MyData_V1.0.csv")
+
+str(MktData)
+
+## Treating missing values with previous day data
+# install.packages("zoo")
+library(zoo)
+MktData_Imputed<-na.locf(MktData)
+View(MktData_Imputed)
+colSums(is.na(MktData_Imputed))
+
+str(MktData_Imputed)
+
+### Normalizing Data
+# Log prices = Ln(Close(t))
+# Close(t)-Mean
+# (Close(t)-Mean)/(StdDev)
+# Ln(Close(t))-Mean
+# Ln(Close) - Ln(Close1) : Close1 is previous close.
+# (Close-Close1)*100/Close1
+# (Close-LowN)/(HighN-LowN) : LowN and HighN are the low and high within the last N values.
+# Log = Ln(Close(ds))
+
+#Taking the Index
+MktData_LessDate<-  MktData_Imputed[,c(2:12)]
+View(MktData_LessDate)
+class(MktData_LessDate)
+MktData_LessDate=as.data.frame(MktData_LessDate)
+
+# Convert to Numeric
+for(i in 1:ncol(MktData_LessDate))
+{
+  MktData_LessDate[i]=as.numeric(unlist(MktData_LessDate[i]))
+}
+str(MktData_LessDate)
+
+# Save the data as an RDA file for quick retrieval
+save(MktData_LessDate,file = 'MktData_LessDate.Rda')
+str(MktData_LessDate)
+View(MktData_LessDate)
+# Normalizing the data using Difference function
+#temp = as.data.frame(cbind((100*diff(log(dss$Nifty))),(100*diff(log(dss$STI))),(100*diff(log(dss$NIKKEI))),(100*diff(log(dss$HANGSENG))),(100*diff(log(dss$Shanghai))),(100*diff(log(dss$CAC40))),(100*diff(log(dss$FTSE))),(100*diff(log(dss$DAX))),(100*diff(log(dss$`S&P`))),(100*diff(log(dss$NASDAQ))),(100*diff(log(dss$DJI)))))
+a = (100*diff(log(MktData_LessDate[,1])))
+
+for(i in 2:ncol(MktData_LessDate)){
+  b = (100*diff(log(MktData_LessDate[,i])))
+  a <- as.data.frame(cbind(a,b),col.names = F)  
+}
+View(a)
+MktData_Normalized = a
+class(MktData_Normalized)
+colnames(MktData_Normalized)=colnames(MktData_LessDate)
+
+str(MktData_Normalized)
+View(MktData_Normalized)
+
+MktData_Norm <- MktData_Normalized[,c(1:11)]
+str(MktData_Norm)
+
+View(MktData_Norm)
+
+MktData_NormRound = round(MktData_Norm,3)
+View(MktData_NormRound)
+
+MktData_RmvOutlier = MktData_NormRound
+
+#Outliers
+
+boxplot(MktData_RmvOutlier)
+
+# For NIKKEI
+IQR=quantile(MktData_RmvOutlier$NIKKEI,0.95)-quantile(MktData_RmvOutlier$NIKKEI,0.05)
+
+UpperLImit=quantile(MktData_RmvOutlier$NIKKEI,0.95)+IQR*1.5
+LowerLImit=quantile(MktData_RmvOutlier$NIKKEI,0.05)-IQR*1.5
+
+UpperLImit
+LowerLImit
+
+MktData_RmvOutlier$NIKKEI[MktData_RmvOutlier$NIKKEI>UpperLImit]=UpperLImit
+MktData_RmvOutlier$NIKKEI[MktData_RmvOutlier$NIKKEI<LowerLImit]=LowerLImit
+
+#LowerOutliers_Nikkei
+#UpperOutliers_Nikkei
+
+summary(MktData_RmvOutlier$NIKKEI)
+
+# For HANGSENG
+IQR1=quantile(MktData_RmvOutlier$HANGSENG,0.95)-quantile(MktData_RmvOutlier$HANGSENG,0.05)
+
+UpperLImit1=quantile(MktData_RmvOutlier$HANGSENG,0.95)+IQR*1.5
+LowerLImit1=quantile(MktData_RmvOutlier$HANGSENG,0.05)-IQR*1.5
+
+UpperLImit1
+LowerLImit1
+
+MktData_RmvOutlier$HANGSENG[MktData_RmvOutlier$HANGSENG>UpperLImit1]=UpperLImit1
+MktData_RmvOutlier$HANGSENG[MktData_RmvOutlier$HANGSENG<LowerLImit1]=LowerLImit1
+
+#LowerOutliers_Nikkei
+#UpperOutliers_Nikkei
+
+summary(MktData_RmvOutlier$HANGSENG)
+
+# For STI
+IQR2=quantile(MktData_RmvOutlier$STI,0.95)-quantile(MktData_RmvOutlier$STI,0.05)
+
+UpperLImit2=quantile(MktData_RmvOutlier$STI,0.95)+IQR*1.5
+LowerLImit2=quantile(MktData_RmvOutlier$STI,0.05)-IQR*1.5
+
+UpperLImit2
+LowerLImit2
+
+MktData_RmvOutlier$STI[MktData_RmvOutlier$STI>UpperLImit2]=UpperLImit2
+MktData_RmvOutlier$STI[MktData_RmvOutlier$STI<LowerLImit2]=LowerLImit2
+
+boxplot(MktData_RmvOutlier)
+
+# For Nifty
+IQR3=quantile(MktData_RmvOutlier$Nifty,0.95)-quantile(MktData_RmvOutlier$Nifty,0.05)
+
+UpperLImit3=quantile(MktData_RmvOutlier$Nifty,0.95)+IQR*1.5
+LowerLImit3=quantile(MktData_RmvOutlier$Nifty,0.05)-IQR*1.5
+
+UpperLImit3
+LowerLImit3
+
+MktData_RmvOutlier$Nifty[MktData_RmvOutlier$Nifty>UpperLImit3]=UpperLImit3
+MktData_RmvOutlier$Nifty[MktData_RmvOutlier$Nifty<LowerLImit3]=LowerLImit3
+
+# For DJI
+IQR4=quantile(MktData_RmvOutlier$DJI,0.95)-quantile(MktData_RmvOutlier$Nifty,0.05)
+
+UpperLImit4=quantile(MktData_RmvOutlier$DJI,0.95)+IQR*1.5
+LowerLImit4=quantile(MktData_RmvOutlier$DJI,0.05)-IQR*1.5
+
+UpperLImit4
+LowerLImit4
+
+MktData_RmvOutlier$DJI[MktData_RmvOutlier$DJI>UpperLImit4]=UpperLImit4
+MktData_RmvOutlier$DJI[MktData_RmvOutlier$DJI<LowerLImit4]=LowerLImit4
+
+boxplot(MktData_RmvOutlier)
+
+# Correlations 
+library(Hmisc)
+#cor(MktData_RmvOutlier,method="kendell")
+cor(MktData_RmvOutlier,method="pearson")
+cor(MktData_RmvOutlier,method="spearman")
+
+MktData_QDA = MktData_RmvOutlier
+
+MktData_QDA$Nifty[MktData_QDA$Nifty>0]=1
+MktData_QDA$Nifty[MktData_QDA$Nifty<=0]=0
+View(MktData_QDA)
+
+responseY <- as.factor(MktData_QDA$Nifty)
+
+responseY
+
+#install.packages("qdap")
+library(qdap)
+
+#install.packages("MASS")
+library(MASS)
+
+
+mode1.qda <- qda(responseY~MktData_RmvOutlier$STI+MktData_RmvOutlier$NIKKEI+MktData_RmvOutlier$HANGSENG)
+
+qda.pred <- predict(mode1.qda)$class
+
+pred.table <-table(MktData_QDA$Nifty, qda.pred, dnn=c('Actual','Predicted'))
+
+install.packages("caret")
+library(caret)
+
+confusionMatrix(pred.table)
